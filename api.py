@@ -100,8 +100,8 @@ class API():
 
         else:
             print ("Joint Testing for all algorithms")
-            self.test_jointly(d)
-
+            df = self.test_jointly(d)
+        return df
 
         
     def train_chunk_wise(self,clf,d):
@@ -250,8 +250,8 @@ class API():
             test=DataSet(d[dataset]['path'])
             for building in d[dataset]['buildings']:
                 test.set_window(start=d[dataset]['buildings'][building]['start_time'],end=d[dataset]['buildings'][building]['end_time'])
-                test_mains=next(test.buildings[building].elec.mains().load(physical_quantity='power', ac_type=self.power['mains'], sample_period=self.sample_period))
-
+                test_mains=next(test.buildings[building].elec.mains().load(physical_quantity='power', ac_type='apparent', sample_period=self.sample_period))
+                print(f'test_mains: {test_mains}')
 
                 
                 if self.DROP_ALL_NANS:
@@ -261,7 +261,8 @@ class API():
 
                 self.test_mains = [test_mains]
                 self.storing_key = str(dataset) + "_" + str(building) 
-                self.call_predict(self.classifiers)
+                df = self.call_predict(self.classifiers)
+        return df
             
 
     def dropna(self,mains_df, appliance_dfs=None):
@@ -330,6 +331,8 @@ class API():
                 plt.title(i)
                 plt.legend()
             plt.show()
+
+        return pred_overall
             
         
         for metric in self.metrics:
@@ -354,7 +357,7 @@ class API():
         # "ac_type" varies according to the dataset used. 
         # Make sure to use the correct ac_type before using the default parameters in this code.   
         
-            
+        print(test_elec)   
         pred_list = clf.disaggregate_chunk(test_elec)
 
         # It might not have time stamps sometimes due to neural nets
@@ -374,6 +377,7 @@ class API():
         # print(gt_overall)
         pred_overall.plot(label="Pred")
         plt.legend()
+
         return  pred_overall
 
     # metrics
